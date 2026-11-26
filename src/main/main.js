@@ -61,10 +61,20 @@ ipcMain.handle('app:getInfo', () => ({
   isDev,
 }));
 
+// Liked tracks. The renderer asks for one page at a time with the opaque
+// `nextHref` cursor from the previous response (see src/main/scApi.js, which
+// validates the cursor and never follows it to a non-SoundCloud host).
+ipcMain.handle('likes:getPage', (_event, options) =>
+  scApi.fetchLikedTracksPage(options || {})
+);
+
 // SoundCloud OAuth2 PKCE login with secure token storage. Loading the module
 // registers the auth:* ipcMain handlers and the auth:changed event source
 // (see src/main/oauth.js, which uses src/main/tokenStore.js for persistence).
 require('./oauth');
+
+// SoundCloud API client backing the `likes:getPage` handler above.
+const scApi = require('./scApi');
 
 const gotSingleInstanceLock = app.requestSingleInstanceLock();
 if (!gotSingleInstanceLock) {
