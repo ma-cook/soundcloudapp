@@ -61,6 +61,11 @@ ipcMain.handle('app:getInfo', () => ({
   isDev,
 }));
 
+// SoundCloud OAuth2 PKCE login with secure token storage. Loading the module
+// registers the auth:* ipcMain handlers and the auth:changed event source
+// (see src/main/oauth.js, which uses src/main/tokenStore.js for persistence).
+require('./oauth');
+
 const gotSingleInstanceLock = app.requestSingleInstanceLock();
 if (!gotSingleInstanceLock) {
   app.quit();

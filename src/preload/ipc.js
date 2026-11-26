@@ -2,8 +2,17 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 // Allowlists: the renderer can only reach these channels. Feature modules
 // extend both sets as they register new ipcMain handlers / events.
-const INVOKE_CHANNELS = new Set(['app:getInfo']);
-const EVENT_CHANNELS = new Set([]);
+const INVOKE_CHANNELS = new Set([
+  'app:getInfo',
+  // OAuth2 PKCE login (src/main/oauth.js)
+  'auth:login',
+  'auth:logout',
+  'auth:getStatus',
+  'auth:complete',
+]);
+const EVENT_CHANNELS = new Set([
+  'auth:changed',
+]);
 
 /**
  * Invoke a whitelisted main-process handler.
@@ -38,6 +47,31 @@ const api = {
   subscribe,
   app: {
     getInfo: () => ipcRenderer.invoke('app:getInfo'),
+  },
+  /**
+   * SoundCloud OAuth2 session control. Handlers live in src/main/oauth.js;
+   * every method resolves to a renderer-safe status object:
+   * `{ authenticated, expiresAt, scope, hasRefreshToken, storage }`.
+   * Raw access/refresh tokens are never exposed to the renderer.
+   */
+  auth: {
+    /** Opens the system browser for the PKCE authorize step. */
+    login: () => ipcRenderer.invoke('auth:login'),
+    /** Clears the stored tokens and signs out. */
+    logout: () => ipcRenderer.invoke('auth:logout'),
+    /** Current session status (no tokens). */
+    getStatus: () => ipcRenderer.invoke('auth:getStatus'),
+    /**
+     * Manual fallback when the loopback redirect cannot reach the app:
+     * paste the full redirect URL from the browser address bar.
+     */
+    complete: (redirectUrl) => ipcRenderer.invoke('auth:complete', redirectUrl),
+    /**
+     * Subscribe to session changes (login, logout, token refresh).
+     * @param {(status: object) => void} listener
+     * @returns {() => void} unsubscribe
+     */
+    onChanged: (listener) => subscribe('auth:changed', listener),
   },
 };
 
