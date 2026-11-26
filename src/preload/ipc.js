@@ -11,9 +11,15 @@ const INVOKE_CHANNELS = new Set([
   'auth:complete',
   // Liked tracks pagination (src/main/scApi.js via src/main/main.js)
   'likes:getPage',
+  // Track recorder (src/main/recorder.js)
+  'recorder:enqueue',
+  'recorder:getState',
+  'recorder:cancel',
+  'recorder:clearFinished',
 ]);
 const EVENT_CHANNELS = new Set([
   'auth:changed',
+  'recorder:changed',
 ]);
 
 /**

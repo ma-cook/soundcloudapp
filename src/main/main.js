@@ -81,6 +81,16 @@ ipcMain.handle('media:resolveStream', (_event, trackId, options) =>
 // (see src/main/oauth.js, which uses src/main/tokenStore.js for persistence).
 require('./oauth');
 
+// Track Recorder: per-track ffmpeg capture to WAV/FLAC. Loading the module
+// registers the recorder:* ipcMain handlers (see src/main/recorder.js, which
+// resolves media URLs via scApi and pipes them into ffmpeg in the main
+// process — signed CDN URLs never reach the renderer).
+const recorder = require('./recorder');
+
+app.on('quit', () => {
+  recorder.shutdown();
+});
+
 // SoundCloud API client backing the `likes:getPage` handler above.
 const scApi = require('./scApi');
 
