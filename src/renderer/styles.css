@@ -374,3 +374,133 @@ body {
 .lt-retry:hover {
   background: rgba(255, 85, 0, 0.12);
 }
+
+/* ---------------------------------------------------------------------------
+   Recording settings panel (src/renderer/components/RecordingSettings.jsx)
+   --------------------------------------------------------------------------- */
+
+.rs {
+  max-width: 760px;
+  margin-top: 24px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-elevated);
+}
+
+.rs-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.rs-heading {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.rs-row {
+  display: flex;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.rs-row:last-of-type {
+  border-bottom: none;
+}
+
+.rs-row-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+  cursor: default;
+}
+
+.rs-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.rs-toggle {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.rs-hint,
+.rs-dir-path {
+  color: var(--text-muted);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.rs-dir-path {
+  margin-left: 24px;
+}
+
+.rs-actions {
+  display: flex;
+  gap: 8px;
+  margin: 4px 0 0 24px;
+}
+
+.rs-button {
+  padding: 4px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.rs-button:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.rs-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.rs-button-secondary {
+  color: var(--text-muted);
+}
+
+.rs-select {
+  max-width: 420px;
+  margin-left: 24px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.rs-select:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.rs-status {
+  margin: 12px 0 0;
+  font-size: 13px;
+}
+
+.rs-status-error {
+  padding: 8px 12px;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  color: var(--accent);
+}

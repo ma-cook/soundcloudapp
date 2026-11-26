@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import LikedTracks from './components/LikedTracks.jsx';
+import RecordingSettings from './components/RecordingSettings.jsx';
 
 const FALLBACK_APP_INFO = {
   name: 'SoundCloud Desktop',
@@ -41,6 +42,8 @@ export default function App() {
 
       <main className="app-main">
         <LikedTracks />
+
+        <RecordingSettings />
 
         <dl className="app-meta">
           <div className="app-meta-row">
