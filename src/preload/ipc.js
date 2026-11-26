@@ -9,6 +9,8 @@ const INVOKE_CHANNELS = new Set([
   'auth:logout',
   'auth:getStatus',
   'auth:complete',
+  // Liked tracks pagination (src/main/scApi.js via src/main/main.js)
+  'likes:getPage',
 ]);
 const EVENT_CHANNELS = new Set([
   'auth:changed',
@@ -72,6 +74,20 @@ const api = {
      * @returns {() => void} unsubscribe
      */
     onChanged: (listener) => subscribe('auth:changed', listener),
+  },
+  /**
+   * Liked tracks. Pages come from GET /me/likes/tracks via `likes:getPage`;
+   * the main process normalizes each track to:
+   * `{ id, title, permalinkUrl, durationMs, artworkUrl, streamable, playable,
+   *    genre, user: { id, username, avatarUrl }, likedAt }`.
+   */
+  likes: {
+    /**
+     * Fetch one page of the signed-in user's liked tracks.
+     * @param {{ limit?: number, nextHref?: string|null }} [options]
+     * @returns {Promise<{ tracks: Array, nextHref: string|null, hasMore: boolean, fetchedAt: number }>}
+     */
+    getPage: (options) => ipcRenderer.invoke('likes:getPage', options || {}),
   },
 };
 

@@ -89,3 +89,288 @@ body {
   border-radius: 6px;
   color: var(--accent);
 }
+
+/* ---------------------------------------------------------------------------
+   Liked tracks list (src/renderer/components/LikedTracks.jsx)
+   --------------------------------------------------------------------------- */
+
+.lt {
+  max-width: 760px;
+}
+
+.lt-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.lt-heading {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.lt-count {
+  color: var(--text-muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.lt-refresh {
+  margin-left: auto;
+  padding: 4px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.lt-refresh:hover {
+  color: var(--text);
+  border-color: var(--text-muted);
+}
+
+.lt-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--bg-elevated);
+}
+
+.lt-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  user-select: none;
+}
+
+.lt-row:last-child {
+  border-bottom: none;
+}
+
+.lt-row:hover {
+  background: #1c2027;
+}
+
+.lt-row-selected {
+  background: #24282f;
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.lt-row-muted {
+  opacity: 0.5;
+}
+
+.lt-row:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.lt-row-index {
+  position: relative;
+  width: 20px;
+  flex: none;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.lt-row-play {
+  position: absolute;
+  inset: 0;
+  display: none;
+  color: var(--accent);
+  font-size: 10px;
+  line-height: 18px;
+}
+
+.lt-row:hover .lt-row-number,
+.lt-row-selected .lt-row-number {
+  visibility: hidden;
+}
+
+.lt-row:hover .lt-row-play,
+.lt-row-selected .lt-row-play {
+  display: block;
+}
+
+.lt-artwork {
+  width: 56px;
+  height: 56px;
+  flex: none;
+  border-radius: 4px;
+  object-fit: cover;
+  background: #22262d;
+}
+
+.lt-artwork-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.lt-row-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.lt-row-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.lt-row-artist {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.lt-row-side {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.lt-row-genre {
+  padding: 1px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-muted);
+  font-size: 11px;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lt-row-duration {
+  min-width: 44px;
+  text-align: right;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.lt-footer {
+  display: flex;
+  justify-content: center;
+  padding: 12px 0;
+}
+
+.lt-load-more {
+  padding: 6px 18px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.lt-load-more:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.lt-loading-more,
+.lt-end {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+/* Loading skeleton */
+
+.lt-row-skeleton {
+  cursor: default;
+}
+
+.lt-artwork-skeleton {
+  background: #22262d;
+}
+
+.lt-skeleton-line {
+  display: block;
+  height: 11px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #22262d 25%, #2a2f37 45%, #22262d 65%);
+  background-size: 200% 100%;
+  animation: lt-shimmer 1.4s linear infinite;
+}
+
+.lt-skeleton-title {
+  width: 55%;
+}
+
+.lt-skeleton-artist {
+  width: 35%;
+  margin-top: 6px;
+}
+
+.lt-skeleton-duration {
+  width: 44px;
+  height: 11px;
+}
+
+@keyframes lt-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* Empty / error states */
+
+.lt-state {
+  padding: 32px 24px;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  text-align: center;
+}
+
+.lt-state-title {
+  margin: 0 0 4px;
+  font-weight: 600;
+}
+
+.lt-state-detail {
+  margin: 0 0 12px;
+  color: var(--text-muted);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.lt-retry {
+  padding: 6px 18px;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--accent);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.lt-retry:hover {
+  background: rgba(255, 85, 0, 0.12);
+}

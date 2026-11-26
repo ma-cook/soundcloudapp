@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import LikedTracks from './components/LikedTracks.jsx';
 
 const FALLBACK_APP_INFO = {
   name: 'SoundCloud Desktop',
@@ -39,9 +40,7 @@ export default function App() {
       </header>
 
       <main className="app-main">
-        <p className="app-status">
-          Scaffold ready: main process, preload bridge and renderer are wired up.
-        </p>
+        <LikedTracks />
 
         <dl className="app-meta">
           <div className="app-meta-row">
