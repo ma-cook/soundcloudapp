@@ -87,6 +87,12 @@ require('./oauth');
 // process — signed CDN URLs never reach the renderer).
 const recorder = require('./recorder');
 
+// Recording settings: auto-record toggle, output directory, quality preset.
+// Loading the module registers the settings:* ipcMain handlers (see
+// src/main/settingsStore.js, which recorder.js also reads through
+// settingsStore.getRecordingSettings() when a capture starts).
+require('./settingsStore');
+
 app.on('quit', () => {
   recorder.shutdown();
 });

@@ -16,10 +16,15 @@ const INVOKE_CHANNELS = new Set([
   'recorder:getState',
   'recorder:cancel',
   'recorder:clearFinished',
+  // Recording settings (src/main/settingsStore.js)
+  'settings:get',
+  'settings:setRecording',
+  'settings:chooseOutputDir',
 ]);
 const EVENT_CHANNELS = new Set([
   'auth:changed',
   'recorder:changed',
+  'settings:changed',
 ]);
 
 /**
@@ -105,6 +110,33 @@ const api = {
   media: {
     resolveStream: (trackId, options) =>
       ipcRenderer.invoke('media:resolveStream', trackId, options || {}),
+  },
+  /**
+   * Recording settings. Handlers live in src/main/settingsStore.js, which
+   * persists `{ autoRecord, outputDir, qualityPreset }` to a JSON file in
+   * userData and broadcasts every change on `settings:changed`.
+   */
+  settings: {
+    /** Current recording settings. */
+    get: () => ipcRenderer.invoke('settings:get'),
+    /**
+     * Merge a partial patch (`{ autoRecord, outputDir, qualityPreset }`)
+     * into the stored settings and persist it.
+     * @returns {Promise<object>} the settings now in effect
+     */
+    setRecording: (patch) => ipcRenderer.invoke('settings:setRecording', patch),
+    /**
+     * Open the OS directory picker. Resolves to
+     * `{ canceled, path }` without saving anything — commit the chosen
+     * path with `setRecording({ outputDir })`.
+     */
+    chooseOutputDir: () => ipcRenderer.invoke('settings:chooseOutputDir'),
+    /**
+     * Subscribe to settings changes (any successful setRecording).
+     * @param {(settings: object) => void} listener
+     * @returns {() => void} unsubscribe
+     */
+    onChanged: (listener) => subscribe('settings:changed', listener),
   },
 };
 
