@@ -89,6 +89,17 @@ const api = {
      */
     getPage: (options) => ipcRenderer.invoke('likes:getPage', options || {}),
   },
+  /**
+   * Audio streaming. `resolveStream` returns
+   * `{ trackId, url, format: 'progressive'|'hls', mimeType, isPreview, fetchedAt }`.
+   * The URL is a signed media-CDN link that expires; it is for the
+   * <audio> element only — never persist it. Pass `{ force: true }` to
+   * bypass the main-process cache and re-resolve.
+   */
+  media: {
+    resolveStream: (trackId, options) =>
+      ipcRenderer.invoke('media:resolveStream', trackId, options || {}),
+  },
 };
 
 contextBridge.exposeInMainWorld('cube', api);
