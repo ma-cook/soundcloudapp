@@ -68,6 +68,14 @@ ipcMain.handle('likes:getPage', (_event, options) =>
   scApi.fetchLikedTracksPage(options || {})
 );
 
+// Audio streaming. The renderer asks for a playable URL per track id;
+// src/main/scApi.js resolves the signed media-CDN URL (cached in memory
+// only — it expires, so it is never persisted) and validates that it is
+// an https:// URL before it is ever handed to the renderer's <audio> element.
+ipcMain.handle('media:resolveStream', (_event, trackId, options) =>
+  scApi.resolveTrackStream(trackId, options || {})
+);
+
 // SoundCloud OAuth2 PKCE login with secure token storage. Loading the module
 // registers the auth:* ipcMain handlers and the auth:changed event source
 // (see src/main/oauth.js, which uses src/main/tokenStore.js for persistence).

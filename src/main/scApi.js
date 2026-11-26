@@ -57,6 +57,18 @@ const MAX_PAGES = 200;
  * @property {number}       fetchedAt     Epoch milliseconds, for cache freshness checks.
  */
 
+/**
+ * @typedef {Object} TrackStream
+ * @property {number|string} trackId    Echo of the requested track id.
+ * @property {string}        url        Absolute https:// URL an HTML <audio> element can play.
+ *                                      Media CDN URLs embed expiring signatures, so treat it as
+ *                                      short-lived and never persist it.
+ * @property {'progressive'|'hls'} format
+ * @property {string}        mimeType   e.g. "audio/mpeg".
+ * @property {boolean}       isPreview  True when only a ~30s snippet is licensed for this track.
+ * @property {number}        fetchedAt  Epoch milliseconds when the URL was resolved.
+ */
+
 // ---------------------------------------------------------------------------
 // HTTP plumbing
 // ---------------------------------------------------------------------------
@@ -361,6 +373,152 @@ async function fetchLikedTracks({
   return { tracks: allTracks, total: allTracks.length, pages };
 }
 
+// ---------------------------------------------------------------------------
+// Public API — track audio streams
+// ---------------------------------------------------------------------------
+
+const DEFAULT_MIME_TYPE = 'audio/mpeg';
+const HLS_MIME_TYPE = 'application/vnd.apple.mpegurl';
+/** Signed CDN URLs expire (commonly ~30 min); re-resolve before that. */
+const STREAM_URL_TTL_MS = 20 * 60 * 1000;
+/** Upper bound of the in-memory stream cache; oldest entries are evicted. */
+const STREAM_CACHE_MAX = 128;
+
+/** @type {Map<string, TrackStream>} */
+const streamCache = new Map();
+
+/**
+ * SoundCloud track ids are numeric. Strings are accepted only when purely
+ * numeric, so a poisoned id can never alter the API path we request.
+ * @param {number|string} id
+ * @returns {string}
+ */
+function assertTrackId(id) {
+  if (typeof id === 'number' && Number.isFinite(id)) return String(id);
+  if (typeof id === 'string' && /^[0-9]+$/.test(id)) return id;
+  throw new Error(`Invalid SoundCloud track id: ${JSON.stringify(id ?? null)}`);
+}
+
+/**
+ * The resolved URL is handed to the renderer's <audio> element, so it must be
+ * an absolute https:// URL (SoundCloud media CDNs only serve https).
+ * @param {string} url
+ * @returns {string}
+ */
+function assertHttpsMediaUrl(url) {
+  let parsed;
+  try {
+    parsed = new URL(url);
+  } catch {
+    throw new Error('SoundCloud returned a malformed media stream URL.');
+  }
+  if (parsed.protocol !== 'https:') {
+    throw new Error(`Refusing to play a media URL with protocol "${parsed.protocol}".`);
+  }
+  return parsed.toString();
+}
+
+/** @param {Record<string, any>} entry @returns {'progressive'|'hls'} */
+function readStreamProtocol(entry) {
+  const protocol = entry?.format?.protocol;
+  return typeof protocol === 'string' && protocol.toLowerCase() === 'hls' ? 'hls' : 'progressive';
+}
+
+/** @param {Record<string, any>} entry @param {string} fallback @returns {string} */
+function readStreamMimeType(entry, fallback) {
+  const mime = entry?.format?.mime_type;
+  return typeof mime === 'string' && mime ? mime : fallback;
+}
+
+/**
+ * One rendition of the stream-manifest payload → `TrackStream`, or null when
+ * the rendition is unusable. Unlicensed tracks expose only a short `demo`
+ * snippet, which is returned with `isPreview: true`.
+ * @param {Record<string, any>|Array} payload
+ * @param {string} trackId
+ * @returns {TrackStream|null}
+ */
+function normalizeStreamPayload(payload, trackId) {
+  if (Array.isArray(payload)) {
+    for (const entry of payload) {
+      const stream = normalizeStreamPayload(entry, trackId);
+      if (stream) return stream;
+    }
+    return null;
+  }
+  if (!payload || typeof payload !== 'object') return null;
+  const url = typeof payload.url === 'string' && payload.url ? payload.url : null;
+  if (url) {
+    const format = readStreamProtocol(payload);
+    return {
+      trackId,
+      url: assertHttpsMediaUrl(url),
+      format,
+      mimeType: readStreamMimeType(payload, format === 'hls' ? HLS_MIME_TYPE : DEFAULT_MIME_TYPE),
+      isPreview: false,
+      fetchedAt: Date.now(),
+    };
+  }
+  const demo = Array.isArray(payload.demo) ? payload.demo[0] : null;
+  if (demo && typeof demo.url === 'string' && demo.url) {
+    const format = readStreamProtocol(demo);
+    return {
+      trackId,
+      url: assertHttpsMediaUrl(demo.url),
+      format,
+      mimeType: readStreamMimeType(demo, DEFAULT_MIME_TYPE),
+      isPreview: true,
+      fetchedAt: Date.now(),
+    };
+  }
+  return null;
+}
+
+/**
+ * Resolve an `<audio>`-playable URL for a track.
+ *
+ * Two round-trips are needed: `GET /tracks/{id}/streams` returns `{ url }`
+ * pointing at a transient manifest endpoint; fetching that endpoint yields
+ * the actual rendition(s) — a progressive `{ url, format }` object, an HLS
+ * object, or (for unlicensed tracks) only a short `demo` snippet. Resulting
+ * CDN URLs embed expiring signatures, so they are cached in memory only and
+ * never persisted; `force` bypasses the cache to re-resolve.
+ *
+ * @param {number|string} trackId
+ * @param {{ force?: boolean }} [options]
+ * @returns {Promise<TrackStream>}
+ */
+async function resolveTrackStream(trackId, { force = false } = {}) {
+  const key = assertTrackId(trackId);
+  const cached = streamCache.get(key);
+  if (!force && cached && Date.now() - cached.fetchedAt < STREAM_URL_TTL_MS) {
+    return cached;
+  }
+
+  const streams = await authedGet(`${API_BASE}/tracks/${key}/streams`);
+  const streamsRecord =
+    streams && typeof streams === 'object' ? /** @type {Record<string, any>} */ (streams) : {};
+  const streamUrl =
+    typeof streamsRecord.url === 'string' && streamsRecord.url ? streamsRecord.url : null;
+  if (!streamUrl) {
+    throw new Error(
+      'SoundCloud did not return a stream endpoint for this track (it may not be streamable).'
+    );
+  }
+
+  const stream = normalizeStreamPayload(await authedGet(streamUrl), key);
+  if (!stream) {
+    throw new Error('SoundCloud returned no playable audio rendition for this track.');
+  }
+
+  streamCache.set(key, stream);
+  if (streamCache.size > STREAM_CACHE_MAX) {
+    const oldest = streamCache.keys().next().value;
+    if (oldest !== undefined) streamCache.delete(oldest);
+  }
+  return stream;
+}
+
 /**
  * Basic profile of the signed-in user — handy as an auth sanity check.
  * @returns {Promise<{ id: number|string, username: string, avatarUrl: string|null, permalinkUrl: string|null }>}
@@ -382,5 +540,6 @@ module.exports = {
   fetchLikedTracks,
   iterLikedTracks,
   normalizeTrack,
+  resolveTrackStream,
   getMe,
 };
