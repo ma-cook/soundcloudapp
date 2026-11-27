@@ -53,3 +53,30 @@ set to the binary's full path.
 
 Version bump (`npm version …`) before `npm run dist` to keep artifact names
 and auto-update metadata in sync.
+
+## Manual QA — sign-in gate walkthrough
+
+All signed-in features are gated behind the OAuth session in the renderer
+(`src/renderer/App.jsx` + `src/renderer/hooks/useAuth.js`). Verified flow:
+
+1. **Unauthenticated launch** — `useAuth` probes `auth:getStatus` on mount;
+   while it runs the main area shows "Checking your SoundCloud session…",
+   then the login screen only: "Connect to SoundCloud", header status
+   "Not connected", no Sign out button. `LikedTracks`/`RecordingSettings`
+   are not mounted, so no `likes:getPage` or `settings:*` calls are made.
+2. **Connect** — the button starts the OAuth2 PKCE flow in the system
+   browser (`auth:login` in `src/main/oauth.js`): best-effort loopback
+   redirect server, state check, code exchange, tokens stored by
+   `src/main/tokenStore.js`. While the browser is open the button reads
+   "Connecting…"; the paste-redirect-URL fallback stays usable and settles
+   a pending sign-in too.
+3. **Success** — the token exchange persists the tokens and broadcasts
+   `auth:changed`; the renderer flips to the signed-in view: header
+   "Connected" with a Sign out button, and `LikedTracks` (first page
+   fetched on mount) plus `RecordingSettings` appear.
+4. **Sign out** — `auth:logout` clears the stored tokens
+   (`tokenStore.clearTokens()`), broadcasts `auth:changed` again, and the
+   login screen returns.
+
+Tokens never reach the renderer — only the renderer-safe status object
+(`authenticated`, `expiresAt`, `scope`, `hasRefreshToken`, `storage`).
