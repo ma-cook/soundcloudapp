@@ -504,3 +504,160 @@ body {
   border-radius: 6px;
   color: var(--accent);
 }
+
+/* ---------------------------------------------------------------------------
+   Auth gate: session checking + header controls (src/renderer/App.jsx)
+   --------------------------------------------------------------------------- */
+
+.app-auth-checking {
+  margin: 0 0 16px;
+  color: var(--text-muted);
+}
+
+.app-header-status {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.login-signout {
+  margin-left: auto;
+  padding: 4px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.login-signout:hover:not(:disabled) {
+  color: var(--text);
+  border-color: var(--text-muted);
+}
+
+.login-signout:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* ---------------------------------------------------------------------------
+   Login screen (src/renderer/components/LoginPage.jsx)
+   --------------------------------------------------------------------------- */
+
+.login {
+  max-width: 520px;
+  margin: 48px auto 0;
+  padding: 32px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-elevated);
+  text-align: center;
+}
+
+.login-title {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.login-copy {
+  margin: 0 0 20px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.login-button {
+  padding: 8px 20px;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: var(--accent);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.login-button:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.login-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.login-error {
+  margin: 16px 0 0;
+  padding: 8px 12px;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  color: var(--accent);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.login-fallback {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  text-align: left;
+}
+
+.login-fallback-label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.login-fallback-input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.login-fallback-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.login-fallback-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.login-fallback-cancel {
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.login-fallback-cancel:hover {
+  color: var(--text);
+}
+
+.login-fallback-toggle {
+  margin-top: 20px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 13px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.login-fallback-toggle:hover {
+  color: var(--text);
+}

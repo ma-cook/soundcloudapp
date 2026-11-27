@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import LikedTracks from './components/LikedTracks.jsx';
 import RecordingSettings from './components/RecordingSettings.jsx';
+import LoginPage from './components/LoginPage.jsx';
+import useAuth from './hooks/useAuth.js';
 
 const FALLBACK_APP_INFO = {
   name: 'SoundCloud Desktop',
@@ -17,6 +19,15 @@ const FALLBACK_APP_INFO = {
 export default function App() {
   const [appInfo, setAppInfo] = useState(FALLBACK_APP_INFO);
   const [error, setError] = useState(null);
+  const {
+    isAuthenticated,
+    isChecking,
+    isBusy: isAuthBusy,
+    error: authError,
+    login,
+    logout,
+    complete,
+  } = useAuth();
 
   useEffect(() => {
     let cancelled = false;
@@ -38,12 +49,33 @@ export default function App() {
       <header className="app-header">
         <h1 className="app-title">{appInfo.name}</h1>
         <span className="app-badge">v{appInfo.version}</span>
+        <span className="app-header-status">
+          {isChecking ? 'Checking your SoundCloud session…' : isAuthenticated ? 'Connected' : 'Not connected'}
+        </span>
+        {isAuthenticated && (
+          <button type="button" className="login-signout" onClick={() => logout()} disabled={isAuthBusy}>
+            {isAuthBusy ? 'Signing out…' : 'Sign out'}
+          </button>
+        )}
       </header>
 
       <main className="app-main">
-        <LikedTracks />
+        {isChecking ? (
+          <p className="app-auth-checking">Checking your SoundCloud session…</p>
+        ) : isAuthenticated ? (
+          <>
+            <LikedTracks />
 
-        <RecordingSettings />
+            <RecordingSettings />
+          </>
+        ) : (
+          <LoginPage
+            onLogin={login}
+            onComplete={complete}
+            isBusy={isAuthBusy}
+            error={authError}
+          />
+        )}
 
         <dl className="app-meta">
           <div className="app-meta-row">
