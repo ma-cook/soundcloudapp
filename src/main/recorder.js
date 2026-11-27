@@ -47,13 +47,16 @@ const MAX_JOB_DURATION_MS = 4 * 60 * 60 * 1000;
 const RETRY_DELAY_MS = 2 * 1000;
 
 /**
- * ffmpeg binary resolution. Packaged builds are expected to ship the binary
- * under `<resources>/bin`; `FFMPEG_PATH` overrides it for local runs.
+ * ffmpeg binary resolution. Packaged builds ship the binary under
+ * `<resources>/bin` (see the `extraResources` mapping in package.json, which
+ * copies `vendor/ffmpeg/<os>` there — `ffmpeg.exe` on Windows, `ffmpeg`
+ * elsewhere); `FFMPEG_PATH` overrides it for local runs.
  */
 function resolveFfmpegPath() {
   if (process.env.FFMPEG_PATH) return process.env.FFMPEG_PATH;
   if (app.isPackaged) {
-    return path.join(process.resourcesPath || '', 'bin', 'ffmpeg');
+    const binary = process.platform === 'win32' ? 'ffmpeg.exe' : 'ffmpeg';
+    return path.join(process.resourcesPath || '', 'bin', binary);
   }
   return 'ffmpeg'; // rely on PATH in dev
 }
